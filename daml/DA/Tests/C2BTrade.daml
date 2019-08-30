@@ -1,0 +1,46 @@
+daml 1.2
+module DA.Tests.C2BTrade where
+
+import DA.Date
+import DA.List()
+import DA.Optional()
+import DA.Tectoro.Facts
+import DA.Tectoro.C2BTrade
+import DA.Tectoro.B2EAgree
+
+c2Btrading = scenario do
+  broker <- getParty "SHAREKHAN"
+  client <- getParty "IRFAN"
+  exchange <- getParty "NSE"
+  regulator <- getParty "SEBI"
+  
+  let terms = OrderTerms with operation = "SELL";securityId =  "INFY";orderId   = "ORDER!@#$";qty = 10.0; price = 100.0;exchange;regulator;tradeDate = date 2020 Jan 1
+  --- broker to exchange agreement
+
+  agree <- submit broker do
+    create BrokerTradeMaster with
+      broker; exchange; agreement_date = date 2020 Jan 1
+  agree1 <- submit exchange do
+    exercise agree ExchangeAccept with
+      tradingLimit = 111; volumeLimit = "222"; exchangeFee = 0.1
+  submit broker do
+    exercise agree1 AcceptExchangeTradeProposal
+  submit broker do
+    fetchByKey @BrokerTradeIssueAgreement (exchange,broker)
+  -- - client to broker agreement and order to trade logic
+  agree <- submit broker do
+    create TradeMaster with
+      commissionRate = 0.01; typeOfTrade = "BOND";broker; agreement_date = date 2020 Jan 1
+  agree10 <- submit broker do
+    exercise agree Invite with
+      client
+  agree2 <- submit client do
+    exercise agree10 AcceptTradeProposal
+  agree3 <- submit client do
+    exercise agree2 Order with 
+      terms
+  agree4 <-submit terms.exchange do
+    exercise agree3 Execute with
+      executionId = "EXEC!@123"
+  submit broker do 
+    exercise agree4 Generate_Trade 

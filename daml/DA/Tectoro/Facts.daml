@@ -1,0 +1,18 @@
+daml 1.2
+module DA.Tectoro.Facts where
+
+data OrderTerms = OrderTerms 
+  with
+    operation : Text
+    securityId: Text
+    orderId   : Text
+    qty       : Decimal
+    price     : Decimal
+    exchange  : Party
+    regulator: Party
+    tradeDate: Date
+  deriving (Eq, Show)
+
+
+
+

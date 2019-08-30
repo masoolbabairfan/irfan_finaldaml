@@ -1,0 +1,21 @@
+daml 1.2
+module DA.Tests.B2EAgree where
+
+import DA.Date
+import DA.List()
+import DA.Tectoro.B2EAgree
+
+b2Etrading = scenario do
+  broker <- getParty "SHAREKHAN"
+  exchange <- getParty "NSE"
+  buyer <- getParty "Buyer"
+  agree <- submit broker do
+    create BrokerTradeMaster with
+      broker; exchange; agreement_date = date 2020 Jan 1
+  agree1 <- submit exchange do
+    exercise agree ExchangeAccept with
+      tradingLimit = 111; volumeLimit = "222"; exchangeFee = 0.1
+  submit broker do
+    exercise agree1 AcceptExchangeTradeProposal
+  submit broker do
+    fetchByKey @BrokerTradeIssueAgreement (exchange,broker)
